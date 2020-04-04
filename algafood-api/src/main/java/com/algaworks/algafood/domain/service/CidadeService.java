@@ -1,10 +1,12 @@
 package com.algaworks.algafood.domain.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import com.algaworks.algafood.domain.exception.EntidadeEmUsoException;
@@ -19,46 +21,43 @@ public class CidadeService {
 	private CidadeRepository cr;
 
 	public List<Cidade> listar() {
-		return cr.todas();
+		return cr.findAll();
 	}
 
 	public Cidade porId(Long id) {
-		Cidade cidade = cr.porId(id);
+		Optional<Cidade> cidade = cr.findById(id);
 
-		if (cidade == null) {
+		if (!cidade.isPresent()) {
 			throw new EntidadeNaoEncontradaException(String.format("Cidade código %d não existe.", id));
 		}
 
-		return cidade;
+		return cidade.get();
 	}
 
 	public Cidade adicionar(Cidade cidade) {
-		return cr.adicionar(cidade);
+		return cr.save(cidade);
 	}
 
 	public Cidade atualizar(Long id, Cidade cidade) {
-		Cidade cidadeAtual = cr.porId(id);
+		Optional<Cidade> cidadeAtual = cr.findById(id);
 
-		if (cidadeAtual == null) {
+		if (!cidadeAtual.isPresent()) {
 			throw new EntidadeNaoEncontradaException(String.format("Cidade código %d não existe.", id));
 		}
 
-		BeanUtils.copyProperties(cidade, cidadeAtual, "id", "estado.nome");
+		BeanUtils.copyProperties(cidade, cidadeAtual.get(), "id", "estado.nome");
 
-		return cr.adicionar(cidadeAtual);
+		return cr.save(cidadeAtual.get());
 	}
 
 	public void remover(Long id) {
-		Cidade cidade = cr.porId(id);
-
-		if (cidade == null) {
-			throw new EntidadeNaoEncontradaException(String.format("Cidade código %d não existe.", id));
-		}
 		
 		try {
-			cr.remover(cidade);
+			cr.deleteById(id);
 		} catch (DataIntegrityViolationException e) {
-			throw new EntidadeEmUsoException(String.format("Cidade %d: %s não pode ser removida pois está em uso.", id, cidade.getNome()));
+			throw new EntidadeEmUsoException(String.format("Cidade %d não pode ser removida pois está em uso.", id));
+		} catch (EmptyResultDataAccessException e) {
+			throw new EntidadeNaoEncontradaException(String.format("Cidade código %d não existe.", id));
 		}
 	}
 

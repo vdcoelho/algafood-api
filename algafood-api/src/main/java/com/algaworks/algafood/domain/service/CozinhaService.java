@@ -17,12 +17,12 @@ public class CozinhaService {
 	private CozinhaRepository cr;
 	
 	public Cozinha salvar(Cozinha cozinha) {
-		return cr.adicionar(cozinha);
+		return cr.save(cozinha);
 	}
 	
 	public void excluir(Long id) {
 		try {
-			cr.remover(id);
+			cr.deleteById(id);
 		} catch (DataIntegrityViolationException e) {
 			throw new EntidadeEmUsoException(String.format("Cozinha %d não pode ser removida pois está em uso.", id));
 		} catch (EmptyResultDataAccessException e) {

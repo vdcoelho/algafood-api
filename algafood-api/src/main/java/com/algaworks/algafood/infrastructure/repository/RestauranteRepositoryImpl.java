@@ -4,41 +4,26 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.transaction.Transactional;
+import javax.persistence.TypedQuery;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import com.algaworks.algafood.domain.model.Restaurante;
-import com.algaworks.algafood.domain.repository.RestauranteRepository;
+import com.algaworks.algafood.domain.repository.RestauranteCustomRepository;
 
-@Component
-public class RestauranteRepositoryImpl implements RestauranteRepository {
+@Repository
+public class RestauranteRepositoryImpl implements RestauranteCustomRepository {
 	
-	@PersistenceContext 
+	@PersistenceContext
 	private EntityManager manager;
 
 	@Override
-	public List<Restaurante> todas() {
-		return manager.createQuery("from Restaurante", Restaurante.class).getResultList();
-	}
-
-	@Override
-	public Restaurante porId(Long id) {
-		return manager.find(Restaurante.class, id);
-	}
-
-	@Transactional
-	@Override
-	public Restaurante adicionar(Restaurante restaurante) {
-		return manager.merge(restaurante);
-	}
-
-	@Transactional
-	@Override
-	public void remover(Restaurante restaurante) {
-		restaurante = porId(restaurante.getId());
-		manager.remove(restaurante);
+	public List<Restaurante> listarRestaurantesDaCozinha(Long cozinhaId) {
+		TypedQuery<Restaurante> query = manager.createQuery("from Restaurante where cozinha.id = :cozinhaId", Restaurante.class);
 		
+		query.setParameter("cozinhaId", cozinhaId);
+		
+		return query.getResultList();
 	}
 
 }
